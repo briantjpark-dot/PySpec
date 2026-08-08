@@ -1,0 +1,39 @@
+project: Todo list
+overview: |
+  A simple todo tracker. Tasks have a title, a priority, and whether they're done.
+
+nouns:
+  task:
+    title: text
+    priority: whole number    # <-- NEW field added to the task noun
+    done: yes/no
+
+  tag:                        # <-- BRAND NEW noun
+    label: text
+
+functions:
+  - name: count_open
+    does: Count how many tasks are still open, meaning not yet done   # <-- CHANGED wording
+    input:
+      tasks: list of task
+    output: whole number
+    examples:
+      - given:
+          tasks:
+            - { title: Laundry, priority: 1, done: no }
+            - { title: Dishes, priority: 2, done: yes }
+        returns: 1
+
+  # all_titles was REMOVED
+
+  - name: highest_priority    # <-- BRAND NEW function
+    does: Return the title of the task with the highest priority number
+    input:
+      tasks: list of task
+    output: text
+    examples:
+      - given:
+          tasks:
+            - { title: Laundry, priority: 1, done: no }
+            - { title: Dishes, priority: 5, done: no }
+        returns: Dishes

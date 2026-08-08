@@ -29,6 +29,11 @@ def semantic_types(raw: str, nouns: dict) -> str:
         inner = raw[len("list of "):].strip()
         return f"list[{semantic_types(inner, nouns)}]"
 
+    if low.startswith("a "):
+        return semantic_types(raw[2:].strip(), nouns)
+    if low.startswith("an "):
+        return semantic_types(raw[3:].strip(), nouns)
+
     if low in NICKNAMES:
         return NICKNAMES[low]
 
@@ -218,7 +223,7 @@ def build(spec_path: str, out_dir: str = "generated") -> None:
 
 
 if __name__ == "__main__":
-    spec_file = sys.argv[1] if len(sys.argv) > 1 else "spec.yaml"
+    spec_file = sys.argv[1] if len(sys.argv) > 1 else "scheduling.yaml"
     try:
         build(spec_file)
     except SpecError as e:

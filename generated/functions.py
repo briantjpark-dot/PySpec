@@ -1,14 +1,20 @@
 from spec_models import *
 
-def total_per_person(expenses: list[Expense]) -> str:
-    """Add up how much each person paid, returned as a name to total mapping"""
+def sort_events(events: list[Event]) -> list[Event]:
+    """Sort a day's events by their start time, earliest first"""
     raise NotImplementedError
 
-def biggest_spender(expenses: list[Expense]) -> str:
-    """Return the name of the person who paid the most in total"""
+def has_overlap(events: list[Event]) -> bool:
+    """Return yes if any two events in the list overlap in time. Events that only touch at the edges (one ends exactly when the next starts) do NOT count as overlapping.
+"""
     raise NotImplementedError
 
-def even_split_owed(total: float, people: int) -> float:
-    """Given the total spent and the number of people, return how much each person owes to make everyone pay an equal share.
+def free_slots(events: list[Event], day_start: str, day_end: str) -> list[Slot]:
+    """Given a day's events and the day's start and end times, return the free gaps: before the first event, between events, and after the last event. Assume the events do not overlap and are not necessarily sorted.
+"""
+    raise NotImplementedError
+
+def fits_in_slot(slot: Slot, minutes: int) -> bool:
+    """Given a free slot and a meeting length in minutes, return yes if a meeting of that length fits inside the slot.
 """
     raise NotImplementedError
