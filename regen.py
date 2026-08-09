@@ -5,22 +5,49 @@ import sys
 from build import gen_stubs, gen_tests
 from specdiff import load_spec, diff_specs, describe
 
-#retrieving nouns
+#Retrieving nouns
 def nouns_of(spec: dict) -> dict:
     return spec.get("nouns") or {}
 
+#Retrieving the datatype per noun -> a bit confusing, but if there is a variable like "events: list of event" it returns "list of event" 
+# which later gets stripped to "event" to be parsed for noun search
+#A real limit rn is that everything has to be in singular form; plurals with "s" and "es" endings get funky
+def noun_of_type(datatype: str, nouns: dict) -> str | None:
+    name = str(datatype).strip().lower()
+    for prefix in ("list of ", "a ", "an "):
+        if name.startswith(prefix):
+            name = name[len(prefix):].strip()
+    return name if name in nouns else None
+
+#eturn the names of functions whose inputs or outputs refer to any of the changed nouns
+def functions_using_nouns(functions: list, changed_noun_names: set, nouns: dict) -> set:
+    affected = set()
+    for function in functions:
+        # each input's datatype is a dict value; the output is its own value
+        datatypes = list(function.get("input", {}).values()) + [function.get("output", "")]
+        for datatype in datatypes:
+            noun = noun_of_type(datatype, nouns)
+            if noun in changed_noun_names:
+                affected.add(function["name"])
+                break
+    return affected
 
 def regenerate_changed(old_spec: dict, new_spec: dict) -> dict:
     changeset = diff_specs(old_spec, new_spec)
     fn_changes = changeset["functions"]
-
-    # added + changed need new skeleton, removed need nothing generated.
-    names_to_rebuild = sorted(set(fn_changes["added"]) | set(fn_changes["changed"]))
-
     new_functions = new_spec.get("functions") or []
-    subset = [f for f in new_functions if f["name"] in names_to_rebuild]
-
     nouns = nouns_of(new_spec)
+
+    # functions whose own text was added or changed
+    names_to_rebuild = set(fn_changes["added"]) | set(fn_changes["changed"])
+
+    # functions affected by a changed or removed noun/"ripple"
+    changed_nouns = set(changeset["nouns"]["changed"]) | set(changeset["nouns"]["removed"])
+    rippled = functions_using_nouns(new_functions, changed_nouns, nouns)
+    names_to_rebuild |= rippled #symbol just means to add all the ripplied stuff into names_to_rebuild
+
+    names_to_rebuild = sorted(names_to_rebuild)
+    subset = [f for f in new_functions if f["name"] in names_to_rebuild]
 
     return {
         "changeset": changeset,
@@ -29,7 +56,6 @@ def regenerate_changed(old_spec: dict, new_spec: dict) -> dict:
         "stubs": gen_stubs(subset, nouns),
         "tests": gen_tests(subset, nouns),
     }
-
 
 def write_packet(result: dict, out_dir: str = "changed") -> None:
     out = Path(out_dir)
