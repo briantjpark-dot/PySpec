@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>SpecForge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="desktop">
+    <div class="desktop-main">
+
+      <div class="desktop-icons">
+        <div class="icon">
+          <div class="icon-glyph"></div>
+          <div class="icon-label">My Specs</div>
+        </div>
+        <div class="icon">
+          <div class="icon-glyph doc">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="icon-label">README.TXT</div>
+        </div>
+      </div>
+
+      <div class="window raised">
+
+        <div class="titlebar">
+          <div class="titlebar-icon">S</div>
+          <div class="titlebar-text">SpecForge 95 &mdash; spec.yaml</div>
+          <div class="titlebar-buttons">
+            <div class="tb-btn minimize">_</div>
+            <div class="tb-btn maximize"></div>
+            <div class="tb-btn">&#215;</div>
+          </div>
+        </div>
+
+        <div class="menubar">
+          <div class="menu-item-wrap">
+            <button id="file-menu-btn" class="menu-item"><u>F</u>ile</button>
+            <div id="file-menu" class="menu-dropdown" hidden>
+              <button id="download-zip-btn" class="menu-dropdown-item" disabled>Download as Zip</button>
+            </div>
+          </div>
+          <div class="menu-item"><u>E</u>dit</div>
+          <div class="menu-item"><u>V</u>iew</div>
+          <div class="menu-item"><u>B</u>uild</div>
+          <div class="menu-item"><u>H</u>elp</div>
+        </div>
+
+        <div class="toolbar">
+          <button id="build-btn" class="raised toolbar-btn">
+            <span class="play-icon"></span>
+            <span>Build</span>
+          </button>
+          <div class="toolbar-sep"></div>
+          <button id="show-files-btn" class="raised toolbar-btn" hidden>
+            <span>See files</span>
+          </button>
+        </div>
+
+        <div id="error-banner" class="error-banner" hidden></div>
+
+        <div class="panes">
+          <div class="pane editor-pane">
+            <div class="pane-header">
+              <strong>Specification (YAML)</strong>
+            </div>
+
+            <div id="editor"></div>
+          </div>
+
+          <div id="pane-resizer" class="pane-resizer"></div>
+
+          <div id="output-pane" class="pane output-pane">
+            <div class="pane-header">
+              <strong>Generated files</strong>
+              <div class="pane-header-right">
+                <span class="pane-header-sub">read-only</span>
+                <button id="output-close-btn" class="tb-btn">&#215;</button>
+              </div>
+            </div>
+            <div id="tabs" class="tabs"></div>
+            <pre id="output-code" class="sunken output-code"></pre>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <div id="status-text" class="well">Ready.</div>
+          <div class="well">spec v1 &middot; python 3.11</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="taskbar">
+      <div class="taskbar-app well">
+        <div class="taskbar-app-icon"></div>
+        SpecForge 95
+      </div>
+      <div class="taskbar-spacer"></div>
+      <div id="taskbar-clock" class="well"></div>
+    </div>
+  </div>
+
+  <div id="build-modal" class="modal-overlay" hidden>
+    <div class="modal raised">
+      <div class="titlebar">
+        <div class="titlebar-text">Generating&#8230;</div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-step">Building your spec&#8230;</div>
+        <div class="progress-track sunken">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+
+</body>
+</html>
