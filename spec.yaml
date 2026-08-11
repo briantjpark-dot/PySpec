@@ -1,0 +1,61 @@
+project: Expense splitter
+overview: |
+  A little tool for a group trip. Everyone pays for various things along
+  the way; at the end we want to know how much each person spent, who spent
+  the most, and how much each person owes if we split everything evenly.
+
+nouns:
+  expense:
+    who: text          # the person who paid
+    amount: number     # how much they paid
+    label: text        # what it was for
+
+functions:
+  - name: total_per_person
+    does: Add up how much each person paid, returned as a name to total mapping
+    input:
+      expenses: list of expense
+    output: text
+    examples:
+      - given:
+          expenses:
+            - { who: Ana, amount: 30.0, label: lunch }
+            - { who: Ben, amount: 10.0, label: coffee }
+            - { who: Ana, amount: 20.0, label: taxi }
+        # for V1 we return a simple readable string so the example stays easy
+        returns: "Ana: 50.0, Ben: 10.0"
+
+  - name: biggest_spender
+    does: Return the name of the person who paid the most in total
+    input:
+      expenses: list of expense
+    output: text
+    examples:
+      - given:
+          expenses:
+            - { who: Ana, amount: 30.0, label: lunch }
+            - { who: Ben, amount: 10.0, label: coffee }
+            - { who: Ana, amount: 20.0, label: taxi }
+        returns: Ana
+
+  - name: even_split_owed
+    does: >
+      Given the total spent and the number of people, return how much each
+      person owes to make everyone pay an equal share.
+    input:
+      total: number
+      people: whole number
+    output: number
+    examples:
+      - given:
+          total: 60.0
+          people: 3
+        returns: 20.0
+      - given:
+          total: 100.0
+          people: 4
+        returns: 25.0
+
+main:
+  - total_per_person
+  - biggest_spender
