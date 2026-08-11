@@ -1,2 +1,15 @@
 .env
 .venv/
+
+# Playwright MCP artifacts (screenshots, console logs, downloads from testing)
+.playwright-mcp/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Build output from build.py
+generated/
+
+# macOS
+.DS_Store
