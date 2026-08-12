@@ -6,13 +6,15 @@ import { HighlightStyle, syntaxHighlighting, syntaxTree } from "@codemirror/lang
 import { tags } from "@lezer/highlight";
 import { Decoration, ViewPlugin, keymap } from "@codemirror/view";
 import { RangeSetBuilder, Prec } from "@codemirror/state";
-import { indentWithTab } from "@codemirror/commands";
+import { indentWithTab, undo, redo } from "@codemirror/commands";
+import JSZip from "jszip";
 
 const buildBtn = document.getElementById("build-btn");
 const outputCode = document.getElementById("output-code");
 const errorBanner = document.getElementById("error-banner");
 const tabs = document.getElementById("tabs");
 const buildModal = document.getElementById("build-modal");
+const modalStep = document.getElementById("modal-step");
 const statusText = document.getElementById("status-text");
 const progressFill = document.getElementById("progress-fill");
 const taskbarClock = document.getElementById("taskbar-clock");
@@ -23,16 +25,42 @@ const outputCloseBtn = document.getElementById("output-close-btn");
 const showFilesBtn = document.getElementById("show-files-btn");
 const fileMenuBtn = document.getElementById("file-menu-btn");
 const fileMenu = document.getElementById("file-menu");
+const downloadZipBtn = document.getElementById("download-zip-btn");
+const editMenuBtn = document.getElementById("edit-menu-btn");
+const editMenu = document.getElementById("edit-menu");
+const undoBtn = document.getElementById("undo-btn");
+const redoBtn = document.getElementById("redo-btn");
+const viewMenuBtn = document.getElementById("view-menu-btn");
+const viewMenu = document.getElementById("view-menu");
+const helpMenuBtn = document.getElementById("help-menu-btn");
+const helpMenu = document.getElementById("help-menu");
 
-fileMenuBtn.addEventListener("click", () => {
-  fileMenu.hidden = !fileMenu.hidden;
-  fileMenuBtn.classList.toggle("menu-open", !fileMenu.hidden);
-});
+const menus = [
+  { btn: fileMenuBtn, menu: fileMenu },
+  { btn: editMenuBtn, menu: editMenu },
+  { btn: viewMenuBtn, menu: viewMenu },
+  { btn: helpMenuBtn, menu: helpMenu },
+];
+
+function closeMenus() {
+  for (const { btn, menu } of menus) {
+    menu.hidden = true;
+    btn.classList.remove("menu-open");
+  }
+}
+
+for (const { btn, menu } of menus) {
+  btn.addEventListener("click", () => {
+    const opening = menu.hidden;
+    closeMenus();
+    menu.hidden = !opening;
+    btn.classList.toggle("menu-open", !opening);
+  });
+}
 
 document.addEventListener("click", (e) => {
-  if (!fileMenu.hidden && !e.target.closest(".menu-item-wrap")) {
-    fileMenu.hidden = true;
-    fileMenuBtn.classList.remove("menu-open");
+  if (!e.target.closest(".menu-item-wrap")) {
+    closeMenus();
   }
 });
 
@@ -86,9 +114,7 @@ const nounFieldTypes = [
 ];
 const nounFieldTypeSource = completeFromList(nounFieldTypes);
 
-// Walk upward from `lineNumber`, tracking the smallest indentation seen, to
-// find the enclosing top-level (0-indent) key - i.e. which top-level YAML
-// section this line lives under.
+// Walk upward from `lineNumber`, tracking the smallest indentation seen
 function topLevelKeyFor(doc, lineNumber) {
   let minIndent = Infinity;
   for (let n = lineNumber; n >= 1; n--) {
@@ -166,8 +192,7 @@ const pyspecAutocompleteTheme = EditorView.theme({
   },
 });
 
-// @lezer/yaml has no distinct Number node - every plain scalar (numbers,
-// bare words, booleans, ...) parses as "Literal" tagged tags.content, so
+// @lezer/yaml has no distinct Number node so
 // tags.number above never matches. Detect numeric values by content instead.
 const yamlNumberPattern = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 const numberMark = Decoration.mark({ class: "cm-pyspec-number" });
@@ -241,9 +266,9 @@ const editorView = new EditorView({
   parent: document.getElementById("editor"),
   doc: `project: DateMatch  # The name of your project
 overview: |
-  # Just as you'd prompt Claude Code with an overview of what you're building,
-  # give some general context here.
-  A simple dating app that scores compatibility between two user profiles.
+# Just as you'd prompt Claude Code with an overview of what you're building,
+# give some general context here.
+# A simple dating app that scores compatibility between two user profiles.
 
 nouns:
   profile:  # Nouns are the objects or "things" your code works with
@@ -260,7 +285,8 @@ functions:
       profile_b: profile
     output: true/false
     examples:
-      # Examples become tests — give sample inputs and their expected output
+      # Examples become tests — give sample inputs and their expected output.
+      # Examples are entirely optional but recommended!
       - given:
           profile_a: {name: Sam, age: 30, verified: true}
           profile_b: {name: Alex, age: 28, verified: true}
@@ -285,6 +311,16 @@ functions:
   ],
 });
 
+undoBtn.addEventListener("click", () => {
+  undo(editorView);
+  editorView.focus();
+});
+
+redoBtn.addEventListener("click", () => {
+  redo(editorView);
+  editorView.focus();
+});
+
 function updateClock() {
   taskbarClock.textContent = new Date().toLocaleTimeString([], {
     hour: "numeric",
@@ -303,6 +339,15 @@ function selectTab(button, name, data) {
   outputCode.textContent = data.files[name];
 }
 
+let lastBuildFiles = null;
+
+const BUILD_STEPS = [
+  "Parsing spec...",
+  "Resolving nouns...",
+  "Writing functions.py...",
+  "Deriving tests and examples...",
+];
+
 buildBtn.addEventListener("click", async () => {
   const yamlText = editorView.state.doc.toString();
 
@@ -312,6 +357,17 @@ buildBtn.addEventListener("click", async () => {
   tabs.textContent = "";
   statusText.textContent = "Building…";
   buildModal.hidden = false;
+  downloadZipBtn.disabled = true;
+  lastBuildFiles = null;
+
+  const STEP_DURATION_MS = 800;
+
+  let stepIndex = 0;
+  modalStep.textContent = BUILD_STEPS[stepIndex];
+  const stepInterval = setInterval(() => {
+    stepIndex = (stepIndex + 1) % BUILD_STEPS.length;
+    modalStep.textContent = BUILD_STEPS[stepIndex];
+  }, STEP_DURATION_MS);
 
   let response, data;
   try {
@@ -322,6 +378,7 @@ buildBtn.addEventListener("click", async () => {
     });
     data = await response.json();
   } finally {
+    clearInterval(stepInterval);
     progressFill.classList.add("complete");
     await new Promise((resolve) => setTimeout(resolve, 300));
     buildModal.hidden = true;
@@ -351,4 +408,35 @@ buildBtn.addEventListener("click", async () => {
   }
 
   statusText.textContent = "Build succeeded.";
+
+  lastBuildFiles = data.files;
+  downloadZipBtn.disabled = false;
 });
+
+downloadZipBtn.addEventListener("click", async () => {
+  const blob = await makeZip(lastBuildFiles);
+  downloadBlob(blob, "pyspec-output.zip");
+});
+
+async function makeZip(files) {
+  const zip = new JSZip();
+  for (const [filename, contents] of Object.entries(files)) {
+    zip.file(filename, contents);
+  }
+  const blob = await zip.generateAsync({ type: "blob" });
+  return blob;
+}
+
+//making a temp url and an invisible link
+//i know we can use fileSave.js but I tried it that way and for some reason it didn't work,
+//maybe the library is just funky
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

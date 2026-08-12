@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>SpecForge</title>
+  <title>PySpec</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -23,7 +23,7 @@
             <span></span>
             <span></span>
           </div>
-          <div class="icon-label">README.TXT</div>
+          <div class="icon-label">GUIDE</div>
         </div>
       </div>
 
@@ -31,7 +31,7 @@
 
         <div class="titlebar">
           <div class="titlebar-icon">S</div>
-          <div class="titlebar-text">SpecForge 95 &mdash; spec.yaml</div>
+          <div class="titlebar-text">PySpec 95 &mdash; spec.yaml</div>
           <div class="titlebar-buttons">
             <div class="tb-btn minimize">_</div>
             <div class="tb-btn maximize"></div>
@@ -46,10 +46,31 @@
               <button id="download-zip-btn" class="menu-dropdown-item" disabled>Download as Zip</button>
             </div>
           </div>
-          <div class="menu-item"><u>E</u>dit</div>
-          <div class="menu-item"><u>V</u>iew</div>
-          <div class="menu-item"><u>B</u>uild</div>
-          <div class="menu-item"><u>H</u>elp</div>
+          <div class="menu-item-wrap">
+            <button id="edit-menu-btn" class="menu-item"><u>E</u>dit</button>
+            <div id="edit-menu" class="menu-dropdown" hidden>
+              <button id="undo-btn" class="menu-dropdown-item">Undo</button>
+              <button id="redo-btn" class="menu-dropdown-item">Redo</button>
+            </div>
+          </div>
+          <div class="menu-item-wrap">
+            <button id="view-menu-btn" class="menu-item"><u>V</u>iew</button>
+            <div id="view-menu" class="menu-dropdown" hidden>
+              <button class="menu-dropdown-item" disabled>More coming soon!</button>
+            </div>
+          </div>
+          <div class="menu-item-wrap">
+            <button id="help-menu-btn" class="menu-item"><u>H</u>elp</button>
+            <div id="help-menu" class="menu-dropdown" hidden>
+              <a
+                id="report-issue-link"
+                class="menu-dropdown-item"
+                href="https://github.com/briantjpark-dot/PySpec/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+              >Report a bug or request a feature</a>
+            </div>
+          </div>
         </div>
 
         <div class="toolbar">
@@ -99,7 +120,7 @@
     <div class="taskbar">
       <div class="taskbar-app well">
         <div class="taskbar-app-icon"></div>
-        SpecForge 95
+        PySpec 95
       </div>
       <div class="taskbar-spacer"></div>
       <div id="taskbar-clock" class="well"></div>
@@ -112,7 +133,7 @@
         <div class="titlebar-text">Generating&#8230;</div>
       </div>
       <div class="modal-body">
-        <div class="modal-step">Building your spec&#8230;</div>
+        <div id="modal-step" class="modal-step">Building your spec&#8230;</div>
         <div class="progress-track sunken">
           <div id="progress-fill" class="progress-fill"></div>
         </div>
