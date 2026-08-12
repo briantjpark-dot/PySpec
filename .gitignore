@@ -13,3 +13,6 @@ generated/
 
 # macOS
 .DS_Store
+
+# Superpowers working docs (specs/plans) - ephemeral, not part of the repo
+docs/
