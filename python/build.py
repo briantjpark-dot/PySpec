@@ -129,6 +129,8 @@ def gen_tests(functions: list, nouns: dict) -> str:
     out = ["from spec_models import *", "from functions import *", ""]
     for fn in functions:
         for i, ex in enumerate(fn.get("examples", []), start=1):
+            if "given" not in ex or "returns" not in ex:
+                continue
             given = ex["given"]
             call_args = ", ".join(
                 f"{n}={build_object(semantic_types(fn['input'][n], nouns), v, nouns)}"
@@ -199,6 +201,26 @@ def gen_claude_md(spec: dict, functions: list, main_steps: list) -> str:
 class SpecError(Exception):
     pass
 
+
+REQUIRED_FUNCTION_FIELDS = ("name", "does", "input", "output")
+
+
+# name/does/input/output define the contract (signature + docstring) so they're
+# required; examples (and given/returns within each one) only feed generated
+# tests, so a function without them just gets no tests.
+def validate_functions(functions: list) -> None:
+    for i, fn in enumerate(functions, start=1):
+        if not isinstance(fn, dict):
+            raise SpecError(f"Function #{i} should be a mapping, got {fn!r}.")
+        missing = [f for f in REQUIRED_FUNCTION_FIELDS if f not in fn]
+        if missing:
+            label = fn.get("name", f"#{i}")
+            raise SpecError(
+                f"Function '{label}' is missing required field(s): "
+                f"{', '.join(missing)}."
+            )
+
+
 def generate(spec: dict) -> dict[str, str]:
     """Pure: a parsed spec in, {filename: file-contents} out. No disk, no print."""
     if not isinstance(spec, dict):
@@ -210,6 +232,8 @@ def generate(spec: dict) -> dict[str, str]:
     nouns = spec.get("nouns") or {}
     functions = spec.get("functions") or []
     main_steps = spec.get("main") or []
+
+    validate_functions(functions)
 
     # validation so that the pipeline must name a real function
     names = [f["name"] for f in functions]

@@ -5,17 +5,23 @@ import yaml
 
 from build import generate, SpecError
 
-#To start backend (need the break between python and python3)
-#cd /Users/briantjpark/pyspec/python 
-#python3 -m uvicorn server:app --host 127.0.0.1 --port 8001
+# To start backend (need the break between python and python3)
+"""
+cd /Users/briantjpark/pyspec/python 
+python3 -m uvicorn server:app --host 127.0.0.1 --port 8001
+"""
 
-#Then to start frontend (need the break between pyspec and python3)
-#cd /Users/briantjpark/pyspec 
-# python3 -m http.server 5500
+# Then to start frontend (need the break between pyspec and python3)
+"""
+cd /Users/briantjpark/pyspec 
+python3 -m http.server 5500
+"""
 
-#Final URLS
-#BE: http://127.0.0.1:8001 (no need to visit)
-#FE: http://127.0.0.1:5500/index.html
+# To run vite frontend:
+"""
+cd client
+npm run dev
+"""
 
 app = FastAPI()
 
