@@ -16,3 +16,6 @@ generated/
 
 # Superpowers working docs (specs/plans) - ephemeral, not part of the repo
 docs/
+
+# Superpowers subagent-driven-development scratch workspace
+.superpowers/
