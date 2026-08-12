@@ -2,9 +2,11 @@
 
 ## Quick Summary
 
-Modern LLMS are extremely capable at programming. However, I find it a bit uneasy to simply prompt these tools and give a go ahead to whatever they produce without understanding any syntax. I feel there is a gap between tools like Claude, Codex, or Lovable placed in the hands of experienced developers who’ve programmed without these AI tools and beginners or intermediates who have only a basic understanding. I fall in this second camp
+Modern LLMS are extremely capable at programming. However, I find it a bit uneasy to simply prompt these tools and give a go ahead to whatever they produce without understanding any syntax. I feel there is a gap between tools like Claude, Codex, or Lovable placed in the hands of experienced developers who’ve programmed without these AI tools and beginners or intermediates who have only a basic understanding. I fall in this second camp.
 
 This tool is intended for people like myself to still take the lead in designing and creating programs without having to pour over resources in syntax. I’ve designed this pseudo-syntax system to outline the basic variables, functions, and datatypes to be used for various programs. Once finished, a markdown, test function, and spec model package will be created to then be handed to a coding agent for better context and strict direction of what should be created. 
+
+Again, this tool is only meant to provide a foundation for the coding agent to build and iterate on top of!
 
 ## How it Works/Syntax Guide
 
