@@ -605,3 +605,91 @@ body {
 .taskbar-spacer {
   flex: 1;
 }
+
+/* --- guide window --- */
+
+.guide-window {
+  position: fixed;
+  top: 60px;
+  left: 140px;
+  width: 480px;
+  height: 360px;
+  z-index: 40;
+}
+
+.guide-window[hidden] {
+  display: none;
+}
+
+#guide-titlebar {
+  cursor: move;
+}
+
+.guide-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  font-size: 11px;
+}
+
+.guide-body h3 {
+  margin: 12px 0 6px;
+  font-size: 12px;
+}
+
+.guide-body h3:first-child {
+  margin-top: 0;
+}
+
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.guide-table th,
+.guide-table td {
+  text-align: left;
+  padding: 3px 6px;
+  border: 1px solid #808080;
+}
+
+.guide-example {
+  margin: 0;
+  background: #fff;
+  border: 1px solid #808080;
+  padding: 6px 8px;
+  font: 400 11px/16px ui-monospace, "Courier New", monospace;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.guide-body ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.guide-body li {
+  margin-bottom: 4px;
+}
+
+.guide-resizer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+}
+
+.guide-resizer::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #808080;
+  border-bottom: 2px solid #808080;
+}

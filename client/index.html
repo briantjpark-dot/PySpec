@@ -137,6 +137,59 @@
     </div>
   </div>
 
+  <div id="guide-window" class="guide-window window raised" hidden>
+    <div class="titlebar" id="guide-titlebar">
+      <div class="titlebar-icon">?</div>
+      <div class="titlebar-text">Guide</div>
+      <div class="titlebar-buttons">
+        <button id="guide-close-btn" class="tb-btn">&#215;</button>
+      </div>
+    </div>
+    <div class="guide-body sunken">
+      <h3>Allowed Types for Noun Fields</h3>
+      <table class="guide-table">
+        <tr><th>Write this</th><th>Meaning</th></tr>
+        <tr><td>text</td><td>words, names, any text</td></tr>
+        <tr><td>whole number</td><td>counting numbers, no decimal point</td></tr>
+        <tr><td>decimal (or number)</td><td>numbers that can have a decimal point</td></tr>
+        <tr><td>yes/no (or true/false)</td><td>a simple true-or-false value</td></tr>
+        <tr><td>date</td><td>a calendar date (written as text)</td></tr>
+        <tr><td>list of &lt;type&gt;</td><td>many of that type, e.g. list of task</td></tr>
+      </table>
+
+      <h3>Example as a Task Manager App</h3>
+      <pre class="guide-example">nouns:
+  task:
+    title: text
+    priority: whole number
+    done: yes/no
+
+functions:
+  - name: count_unfinished
+    does: Count how many tasks are not yet done.
+    input:
+      tasks: list of task
+    output: whole number
+    examples:
+      - given:
+          tasks:
+            - {title: Email, priority: 2, done: false}
+            - {title: Report, priority: 1, done: false}
+            - {title: Lunch, priority: 3, done: true}
+        returns: 2</pre>
+
+      <h3>Common mistakes</h3>
+      <ul>
+        <li>Plural after <code>list of</code> &mdash; write <code>list of task</code>, not <code>list of tasks</code>.</li>
+        <li>A type SpecForge doesn't know &mdash; use <code>whole number</code>, not <code>integer</code> or <code>int</code>; use <code>yes/no</code>, not <code>boolean</code>.</li>
+        <li>Inconsistent indentation &mdash; use spaces, not tabs, and keep the same indent at each level.</li>
+        <li>Forgetting the <code>-</code> before a function &mdash; functions are a list; each one starts with a dash.</li>
+        <li>A missing field in an example &mdash; every noun value in <code>given</code> must include all of that noun's fields.</li>
+      </ul>
+    </div>
+    <div id="guide-resizer" class="guide-resizer"></div>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 
 </body>
