@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8">
   <title>PySpec</title>
-  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -58,13 +57,9 @@
           <div class="menu-item-wrap">
             <button id="help-menu-btn" class="menu-item"><u>H</u>elp</button>
             <div id="help-menu" class="menu-dropdown" hidden>
-              <a
-                id="report-issue-link"
-                class="menu-dropdown-item"
-                href="https://github.com/briantjpark-dot/PySpec/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-              >Report a bug or request a feature</a>
+              <a id="report-issue-link" class="menu-dropdown-item"
+                href="https://github.com/briantjpark-dot/PySpec/issues" target="_blank" rel="noopener noreferrer">Report
+                a bug or request a feature</a>
             </div>
           </div>
         </div>
@@ -148,13 +143,34 @@
     <div class="guide-body sunken">
       <h3>Allowed Types for Noun Fields</h3>
       <table class="guide-table">
-        <tr><th>Write this</th><th>Meaning</th></tr>
-        <tr><td>text</td><td>words, names, any text</td></tr>
-        <tr><td>whole number</td><td>counting numbers, no decimal point</td></tr>
-        <tr><td>decimal (or number)</td><td>numbers that can have a decimal point</td></tr>
-        <tr><td>yes/no (or true/false)</td><td>a simple true-or-false value</td></tr>
-        <tr><td>date</td><td>a calendar date (written as text)</td></tr>
-        <tr><td>list of &lt;type&gt;</td><td>many of that type, e.g. list of task</td></tr>
+        <tr>
+          <th>Write this</th>
+          <th>Meaning</th>
+        </tr>
+        <tr>
+          <td>text</td>
+          <td>words, names, any text</td>
+        </tr>
+        <tr>
+          <td>whole number</td>
+          <td>counting numbers, no decimal point</td>
+        </tr>
+        <tr>
+          <td>decimal (or number)</td>
+          <td>numbers that can have a decimal point</td>
+        </tr>
+        <tr>
+          <td>yes/no (or true/false)</td>
+          <td>a simple true-or-false value</td>
+        </tr>
+        <tr>
+          <td>date</td>
+          <td>a calendar date (written as text)</td>
+        </tr>
+        <tr>
+          <td>list of &lt;type&gt;</td>
+          <td>many of that type, e.g. list of task</td>
+        </tr>
       </table>
 
       <h3>Example as a Task Manager App</h3>
@@ -180,11 +196,15 @@ functions:
 
       <h3>Common mistakes</h3>
       <ul>
-        <li>Plural after <code>list of</code> &mdash; write <code>list of task</code>, not <code>list of tasks</code>.</li>
-        <li>A type SpecForge doesn't know &mdash; use <code>whole number</code>, not <code>integer</code> or <code>int</code>; use <code>yes/no</code>, not <code>boolean</code>.</li>
+        <li>Plural after <code>list of</code> &mdash; write <code>list of task</code>, not <code>list of tasks</code>.
+        </li>
+        <li>A type SpecForge doesn't know &mdash; use <code>whole number</code>, not <code>integer</code> or
+          <code>int</code>; use <code>yes/no</code>, not <code>boolean</code>.</li>
         <li>Inconsistent indentation &mdash; use spaces, not tabs, and keep the same indent at each level.</li>
-        <li>Forgetting the <code>-</code> before a function &mdash; functions are a list; each one starts with a dash.</li>
-        <li>A missing field in an example &mdash; every noun value in <code>given</code> must include all of that noun's fields.</li>
+        <li>Forgetting the <code>-</code> before a function &mdash; functions are a list; each one starts with a dash.
+        </li>
+        <li>A missing field in an example &mdash; every noun value in <code>given</code> must include all of that noun's
+          fields.</li>
       </ul>
     </div>
     <div id="guide-resizer" class="guide-resizer"></div>
@@ -193,4 +213,5 @@ functions:
   <script type="module" src="/src/main.js"></script>
 
 </body>
+
 </html>

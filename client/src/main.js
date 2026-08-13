@@ -376,7 +376,7 @@ buildBtn.addEventListener("click", async () => {
 
   let response, data;
   try {
-    response = await fetch("http://127.0.0.1:8001/build", {
+    response = await fetch(`${import.meta.env.VITE_API_URL}/build`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ spec: yamlText }),
