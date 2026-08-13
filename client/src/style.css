@@ -551,25 +551,24 @@ body {
 
 .progress-fill {
   height: 100%;
-  width: 40%;
+  width: 0%;
   background: repeating-linear-gradient(90deg, #000080 0 10px, #c0c0c0 10px 12px);
-  animation: indeterminate 2s linear infinite;
+  animation: fill-loop 1.6s ease-in-out infinite;
 }
 
 .progress-fill.complete {
   animation: none;
-  margin-left: 0;
   width: 100%;
   transition: width 300ms ease-out;
 }
 
-@keyframes indeterminate {
+@keyframes fill-loop {
   0% {
-    margin-left: -40%;
+    width: 0%;
   }
 
   100% {
-    margin-left: 100%;
+    width: 100%;
   }
 }
 
