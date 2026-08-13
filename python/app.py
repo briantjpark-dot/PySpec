@@ -5,30 +5,14 @@ import yaml
 
 from build import generate, SpecError
 
-# To start backend (need the break between python and python3)
-"""
-cd /Users/briantjpark/pyspec/python 
-python3 -m uvicorn server:app --host 127.0.0.1 --port 8001
-"""
-
-# Then to start frontend (need the break between pyspec and python3)
-"""
-cd /Users/briantjpark/pyspec 
-python3 -m http.server 5500
-"""
-
-# To run vite frontend:
-"""
-cd client
-npm run dev
-"""
-
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    # for now keep as wildcard but later change to the real domain address
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://py-spec.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -61,5 +45,6 @@ def build_endpoint(request: BuildRequest):
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8001, reload=True)
+       import os, uvicorn
+       port = int(os.environ.get("PORT", 8001)) #8001 for local, "PORT" for Cloud
+       uvicorn.run(app, host="0.0.0.0", port=port)
