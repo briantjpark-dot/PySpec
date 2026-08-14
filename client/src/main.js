@@ -32,6 +32,10 @@ const undoBtn = document.getElementById("undo-btn");
 const redoBtn = document.getElementById("redo-btn");
 const viewMenuBtn = document.getElementById("view-menu-btn");
 const viewMenu = document.getElementById("view-menu");
+const tabMenuBtn = document.getElementById("tab-menu-btn");
+const tabMenu = document.getElementById("tab-menu");
+const insertBlankTemplateBtn = document.getElementById("insert-blank-template-btn");
+const loadGuideTemplateBtn = document.getElementById("load-guide-template-btn");
 const helpMenuBtn = document.getElementById("help-menu-btn");
 const helpMenu = document.getElementById("help-menu");
 const guideIcon = document.getElementById("guide-icon");
@@ -44,6 +48,7 @@ const menus = [
   { btn: fileMenuBtn, menu: fileMenu },
   { btn: editMenuBtn, menu: editMenu },
   { btn: viewMenuBtn, menu: viewMenu },
+  { btn: tabMenuBtn, menu: tabMenu },
   { btn: helpMenuBtn, menu: helpMenu },
 ];
 
@@ -135,6 +140,47 @@ function topLevelKeyFor(doc, lineNumber) {
     }
   }
   return null;
+}
+
+// Walk upward from a list item at `indent` to see whether its enclosing key is "given:"
+function isWithinGivenList(doc, lineNumber, indent) {
+  for (let n = lineNumber - 1; n >= 1; n--) {
+    const line = doc.line(n);
+    if (line.text.trim() === "") continue;
+    const lineIndent = line.text.match(/^ */)[0].length;
+    if (lineIndent < indent) {
+      const trimmed = line.text.trim();
+      const key = trimmed.startsWith("- ") ? trimmed.slice(2) : trimmed;
+      return key.startsWith("given:");
+    }
+  }
+  return false;
+}
+
+// Continues "- " bullets on Enter while inside a "given:" list; a second Enter on an empty bullet exits the list.
+function continueGivenListOnEnter(view) {
+  const pos = view.state.selection.main.head;
+  const line = view.state.doc.lineAt(pos);
+  const match = line.text.match(/^(\s*)-\s?/);
+  if (!match) return false;
+
+  const indent = match[1].length;
+  if (!isWithinGivenList(view.state.doc, line.number, indent)) return false;
+
+  const isEmptyBullet = line.text.trim() === "-";
+  if (isEmptyBullet) {
+    view.dispatch({
+      changes: { from: line.from, to: line.to, insert: "" },
+    });
+    return true;
+  }
+
+  const insert = "\n" + " ".repeat(indent) + "- ";
+  view.dispatch({
+    changes: { from: pos, to: pos, insert },
+    selection: { anchor: pos + insert.length },
+  });
+  return true;
 }
 
 function nounFieldTypeCompletions(context) {
@@ -236,7 +282,6 @@ const yamlNumberHighlighter = ViewPlugin.fromClass(
 );
 
 const functionBlockTemplate = [
-  "functions:",
   "  - name: ",
   "    does:",
   "    input:",
@@ -267,9 +312,7 @@ function insertFunctionBlockOnDoubleEnter(view) {
   return false;
 }
 
-const editorView = new EditorView({
-  parent: document.getElementById("editor"),
-  doc: `project: DateMatch  # The name of your project
+const guideTemplate = `project: DateMatch  # The name of your project
 overview: |
 # Just as you'd prompt Claude Code with an overview of what you're building,
 # give some general context here.
@@ -293,10 +336,14 @@ functions:
       # Examples become tests — give sample inputs and their expected output.
       # Examples are entirely optional but recommended!
       - given:
-          profile_a: {name: Sam, age: 30, verified: true}
-          profile_b: {name: Alex, age: 28, verified: true}
+          - profile_a: {name: Sam, age: 30, verified: true}
+          - profile_b: {name: Alex, age: 28, verified: true}
         returns: true
-`,
+`;
+
+const editorView = new EditorView({
+  parent: document.getElementById("editor"),
+  doc: guideTemplate,
   extensions: [
     basicSetup,
     yaml(),
@@ -305,7 +352,7 @@ functions:
     syntaxHighlighting(pyspecHighlight),
     yamlNumberHighlighter,
     Prec.highest(keymap.of([
-      { key: "Enter", run: insertFunctionBlockOnDoubleEnter },
+      { key: "Enter", run: (view) => continueGivenListOnEnter(view) || insertFunctionBlockOnDoubleEnter(view) },
       { key: " ", run: triggerNounFieldTypeDropdown },
       indentWithTab,
     ])),
@@ -323,6 +370,42 @@ undoBtn.addEventListener("click", () => {
 
 redoBtn.addEventListener("click", () => {
   redo(editorView);
+  editorView.focus();
+});
+
+insertBlankTemplateBtn.addEventListener("click", () => {
+  const blankTemplate = `project:
+overview: |
+
+
+nouns:
+  noun1:
+    field1:
+    field2:
+
+functions:
+  - name:
+    does:
+    input:
+    output:
+    examples:
+      - given:
+          - {}
+          - {}
+        returns:`;
+
+  editorView.dispatch({
+    changes: { from: 0, to: editorView.state.doc.length, insert: blankTemplate },
+  });
+  closeMenus();
+  editorView.focus();
+});
+
+loadGuideTemplateBtn.addEventListener("click", () => {
+  editorView.dispatch({
+    changes: { from: 0, to: editorView.state.doc.length, insert: guideTemplate },
+  });
+  closeMenus();
   editorView.focus();
 });
 
