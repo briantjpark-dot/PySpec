@@ -45,6 +45,8 @@ def build_endpoint(request: BuildRequest):
 
 
 if __name__ == "__main__":
-       import os, uvicorn
-       port = int(os.environ.get("PORT", 8001)) #8001 for local, "PORT" for Cloud
-       uvicorn.run(app, host="0.0.0.0", port=port)
+    import os
+    import uvicorn
+    # 8001 for local, "PORT" for Cloud
+    port = int(os.environ.get("PORT", 8001))
+    uvicorn.run(app, host="0.0.0.0", port=port)
