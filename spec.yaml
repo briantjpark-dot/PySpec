@@ -32,10 +32,9 @@ functions:
     output: text
     examples:
       - given:
-          expenses:
-            - { who: Ana, amount: 30.0, label: lunch }
-            - { who: Ben, amount: 10.0, label: coffee }
-            - { who: Ana, amount: 20.0, label: taxi }
+          - { who: Ana, amount: 30.0, label: lunch }
+          - { who: Ben, amount: 10.0, label: coffee }
+          - { who: Ana, amount: 20.0, label: taxi }
         returns: Ana
 
   - name: even_split_owed
@@ -55,7 +54,3 @@ functions:
           total: 100.0
           people: 4
         returns: 25.0
-
-main:
-  - total_per_person
-  - biggest_spender
