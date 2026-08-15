@@ -316,7 +316,7 @@ const guideTemplate = `project: DateMatch  # The name of your project
 overview: |
 # Just as you'd prompt Claude Code with an overview of what you're building,
 # give some general context here.
-# A simple dating app that scores compatibility between two user profiles.
+# Ex. A simple dating app that scores compatibility between two user profiles.
 
 nouns:
   profile:  # Nouns are the objects or "things" your code works with
@@ -336,8 +336,8 @@ functions:
       # Examples become tests — give sample inputs and their expected output.
       # Examples are entirely optional but recommended!
       - given:
-          - profile_a: {name: Sam, age: 30, verified: true}
-          - profile_b: {name: Alex, age: 28, verified: true}
+          profile_a: {name: Sam, age: 30, verified: true}
+          profile_b: {name: Alex, age: 28, verified: true}
         returns: true
 `;
 

@@ -325,6 +325,7 @@ body {
   box-shadow: 2px 2px 0 rgba(0, 0, 0, .2);
   font-size: 11px;
   line-height: 1.45;
+  white-space: pre-wrap;
 }
 
 /* browsers give [hidden] and .error-banner{display:flex} equal cascade

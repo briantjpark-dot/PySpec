@@ -32,9 +32,10 @@ functions:
     output: text
     examples:
       - given:
-          - { who: Ana, amount: 30.0, label: lunch }
-          - { who: Ben, amount: 10.0, label: coffee }
-          - { who: Ana, amount: 20.0, label: taxi }
+          expenses:
+            - { who: Ana, amount: 30.0, label: lunch }
+            - { who: Ben, amount: 10.0, label: coffee }
+            - { who: Ana, amount: 20.0, label: taxi }
         returns: Ana
 
   - name: even_split_owed
