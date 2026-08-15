@@ -9,107 +9,8 @@ import { RangeSetBuilder, Prec } from "@codemirror/state";
 import { indentWithTab, undo, redo } from "@codemirror/commands";
 import JSZip from "jszip";
 
-const buildBtn = document.getElementById("build-btn");
-const outputCode = document.getElementById("output-code");
-const errorBanner = document.getElementById("error-banner");
-const tabs = document.getElementById("tabs");
-const buildModal = document.getElementById("build-modal");
-const modalStep = document.getElementById("modal-step");
-const statusText = document.getElementById("status-text");
-const progressFill = document.getElementById("progress-fill");
-const taskbarClock = document.getElementById("taskbar-clock");
-const editorPane = document.querySelector(".editor-pane");
-const paneResizer = document.getElementById("pane-resizer");
-const outputPane = document.getElementById("output-pane");
-const outputCloseBtn = document.getElementById("output-close-btn");
-const showFilesBtn = document.getElementById("show-files-btn");
-const fileMenuBtn = document.getElementById("file-menu-btn");
-const fileMenu = document.getElementById("file-menu");
-const downloadZipBtn = document.getElementById("download-zip-btn");
-const editMenuBtn = document.getElementById("edit-menu-btn");
-const editMenu = document.getElementById("edit-menu");
-const undoBtn = document.getElementById("undo-btn");
-const redoBtn = document.getElementById("redo-btn");
-const viewMenuBtn = document.getElementById("view-menu-btn");
-const viewMenu = document.getElementById("view-menu");
-const tabMenuBtn = document.getElementById("tab-menu-btn");
-const tabMenu = document.getElementById("tab-menu");
-const insertBlankTemplateBtn = document.getElementById("insert-blank-template-btn");
-const loadGuideTemplateBtn = document.getElementById("load-guide-template-btn");
-const helpMenuBtn = document.getElementById("help-menu-btn");
-const helpMenu = document.getElementById("help-menu");
-const guideIcon = document.getElementById("guide-icon");
-const guideWindow = document.getElementById("guide-window");
-const guideTitlebar = document.getElementById("guide-titlebar");
-const guideCloseBtn = document.getElementById("guide-close-btn");
-const guideResizer = document.getElementById("guide-resizer");
 
-const menus = [
-  { btn: fileMenuBtn, menu: fileMenu },
-  { btn: editMenuBtn, menu: editMenu },
-  { btn: viewMenuBtn, menu: viewMenu },
-  { btn: tabMenuBtn, menu: tabMenu },
-  { btn: helpMenuBtn, menu: helpMenu },
-];
-
-function closeMenus() {
-  for (const { btn, menu } of menus) {
-    menu.hidden = true;
-    btn.classList.remove("menu-open");
-  }
-}
-
-for (const { btn, menu } of menus) {
-  btn.addEventListener("click", () => {
-    const opening = menu.hidden;
-    closeMenus();
-    menu.hidden = !opening;
-    btn.classList.toggle("menu-open", !opening);
-  });
-}
-
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".menu-item-wrap")) {
-    closeMenus();
-  }
-});
-
-const MIN_PANE_WIDTH = 200;
-let savedEditorFlex = "";
-
-paneResizer.addEventListener("pointerdown", (e) => {
-  paneResizer.setPointerCapture(e.pointerId);
-  paneResizer.classList.add("dragging");
-});
-
-paneResizer.addEventListener("pointermove", (e) => {
-  if (!paneResizer.hasPointerCapture(e.pointerId)) return;
-  const panesRect = paneResizer.parentElement.getBoundingClientRect();
-  const maxWidth = panesRect.width - paneResizer.offsetWidth - MIN_PANE_WIDTH;
-  const width = Math.min(maxWidth, Math.max(MIN_PANE_WIDTH, e.clientX - panesRect.left));
-  editorPane.style.flex = `0 0 ${width}px`;
-});
-
-paneResizer.addEventListener("pointerup", (e) => {
-  paneResizer.releasePointerCapture(e.pointerId);
-  paneResizer.classList.remove("dragging");
-});
-
-outputCloseBtn.addEventListener("click", () => {
-  savedEditorFlex = editorPane.style.flex;
-  outputPane.hidden = true;
-  paneResizer.hidden = true;
-  editorPane.style.flex = "1";
-  showFilesBtn.hidden = false;
-});
-
-showFilesBtn.addEventListener("click", () => {
-  outputPane.hidden = false;
-  paneResizer.hidden = false;
-  editorPane.style.flex = savedEditorFlex;
-  showFilesBtn.hidden = true;
-});
-
+// Syntax colors for the YAML spec editor.
 const pyspecHighlight = HighlightStyle.define([
   { tag: tags.keyword, color: "#000080" }, // navy for keywords
   { tag: tags.string, color: "#a31515" },  // red for quoted strings
@@ -183,6 +84,7 @@ function continueGivenListOnEnter(view) {
   return true;
 }
 
+// Offers "text" / "whole number" / etc. only while typing a field's value under the "nouns:" block.
 function nounFieldTypeCompletions(context) {
   const line = context.state.doc.lineAt(context.pos);
   const beforeCursor = line.text.slice(0, context.pos - line.from);
@@ -210,6 +112,7 @@ function triggerNounFieldTypeDropdown(view) {
   return false;
 }
 
+// Windows-95-styled dropdown for the noun-field-type autocomplete above
 const pyspecAutocompleteTheme = EditorView.theme({
   ".cm-tooltip.cm-tooltip-autocomplete": {
     background: "#c0c0c0",
@@ -244,7 +147,7 @@ const pyspecAutocompleteTheme = EditorView.theme({
 });
 
 // @lezer/yaml has no distinct Number node so
-// tags.number above never matches. Detect numeric values by content instead.
+// tags.number above never matches. Detect numeric values by content instead
 const yamlNumberPattern = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 const numberMark = Decoration.mark({ class: "cm-pyspec-number" });
 
@@ -281,6 +184,7 @@ const yamlNumberHighlighter = ViewPlugin.fromClass(
   { decorations: (instance) => instance.decorations }
 );
 
+// Snippet inserted after a function's last "returns:" line (see insertFunctionBlockOnDoubleEnter below).
 const functionBlockTemplate = [
   "  - name: ",
   "    does:",
@@ -312,6 +216,7 @@ function insertFunctionBlockOnDoubleEnter(view) {
   return false;
 }
 
+// Starter doc the editor loads with, and what "Load guide template" restores.
 const guideTemplate = `project: DateMatch  # The name of your project
 overview: |
 # Just as you'd prompt Claude Code with an overview of what you're building,
@@ -341,6 +246,31 @@ functions:
         returns: true
 `;
 
+// What "Insert blank template" replaces the doc with.
+const blankTemplate = `project:
+overview:
+
+
+nouns:
+  noun1:
+    field1:
+    field2:
+
+functions:
+  - name:
+    does:
+    input:
+    output:
+    examples:
+      - given:
+          - {}
+          - {}
+        returns:`;
+
+
+// Editor instantiation
+
+
 const editorView = new EditorView({
   parent: document.getElementById("editor"),
   doc: guideTemplate,
@@ -363,6 +293,18 @@ const editorView = new EditorView({
   ],
 });
 
+
+// Editor toolbar actions — undo/redo and the two "replace the doc" buttons.
+
+
+const undoBtn = document.getElementById("undo-btn");
+const redoBtn = document.getElementById("redo-btn");
+const insertBlankTemplateBtn = document.getElementById("insert-blank-template-btn");
+const loadGuideTemplateBtn = document.getElementById("load-guide-template-btn");
+const uploadSpecBtn = document.getElementById("upload-spec-btn");
+const uploadSpecInput = document.getElementById("upload-spec-input");
+const downloadSpecBtn = document.getElementById("download-spec-btn");
+
 undoBtn.addEventListener("click", () => {
   undo(editorView);
   editorView.focus();
@@ -374,26 +316,6 @@ redoBtn.addEventListener("click", () => {
 });
 
 insertBlankTemplateBtn.addEventListener("click", () => {
-  const blankTemplate = `project:
-overview: |
-
-
-nouns:
-  noun1:
-    field1:
-    field2:
-
-functions:
-  - name:
-    does:
-    input:
-    output:
-    examples:
-      - given:
-          - {}
-          - {}
-        returns:`;
-
   editorView.dispatch({
     changes: { from: 0, to: editorView.state.doc.length, insert: blankTemplate },
   });
@@ -409,6 +331,198 @@ loadGuideTemplateBtn.addEventListener("click", () => {
   editorView.focus();
 });
 
+uploadSpecBtn.addEventListener("click", () => {
+  uploadSpecInput.click();
+});
+
+uploadSpecInput.addEventListener("change", async () => {
+  const file = uploadSpecInput.files[0];
+  if (!file) return;
+
+  const text = await file.text();
+  editorView.dispatch({
+    changes: { from: 0, to: editorView.state.doc.length, insert: text },
+  });
+  uploadSpecInput.value = "";
+  closeMenus();
+  editorView.focus();
+});
+
+// Names the download after the spec's "project:" value, falling back to "spec.yaml".
+function specFilename(yamlText) {
+  const match = yamlText.match(/^project:\s*(.+)$/m);
+  const rawName = match ? match[1].replace(/\s+#.*$/, "").trim() : "";
+  const sanitized = rawName.replace(/[\\/:*?"<>|]/g, "-");
+  return sanitized ? `${sanitized}.yaml` : "spec.yaml";
+}
+
+downloadSpecBtn.addEventListener("click", () => {
+  const yamlText = editorView.state.doc.toString();
+  const blob = new Blob([yamlText], { type: "text/yaml" });
+  downloadBlob(blob, specFilename(yamlText));
+  closeMenus();
+});
+
+
+// Window chrome — menu bar (File/Edit/View/Tab/Help)
+
+
+const fileMenuBtn = document.getElementById("file-menu-btn");
+const fileMenu = document.getElementById("file-menu");
+const editMenuBtn = document.getElementById("edit-menu-btn");
+const editMenu = document.getElementById("edit-menu");
+const viewMenuBtn = document.getElementById("view-menu-btn");
+const viewMenu = document.getElementById("view-menu");
+const tabMenuBtn = document.getElementById("tab-menu-btn");
+const tabMenu = document.getElementById("tab-menu");
+const helpMenuBtn = document.getElementById("help-menu-btn");
+const helpMenu = document.getElementById("help-menu");
+
+const menus = [
+  { btn: fileMenuBtn, menu: fileMenu },
+  { btn: editMenuBtn, menu: editMenu },
+  { btn: viewMenuBtn, menu: viewMenu },
+  { btn: tabMenuBtn, menu: tabMenu },
+  { btn: helpMenuBtn, menu: helpMenu },
+];
+
+function closeMenus() {
+  for (const { btn, menu } of menus) {
+    menu.hidden = true;
+    btn.classList.remove("menu-open");
+  }
+}
+
+for (const { btn, menu } of menus) {
+  btn.addEventListener("click", () => {
+    const opening = menu.hidden;
+    closeMenus();
+    menu.hidden = !opening;
+    btn.classList.toggle("menu-open", !opening);
+  });
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".menu-item-wrap")) {
+    closeMenus();
+  }
+});
+
+
+// Window chrome — draggable pane divider and output-pane show/hide
+
+
+const editorPane = document.querySelector(".editor-pane");
+const paneResizer = document.getElementById("pane-resizer");
+const outputPane = document.getElementById("output-pane");
+const outputCloseBtn = document.getElementById("output-close-btn");
+const showFilesBtn = document.getElementById("show-files-btn");
+
+const MIN_PANE_WIDTH = 200;
+let savedEditorFlex = "";
+
+paneResizer.addEventListener("pointerdown", (e) => {
+  paneResizer.setPointerCapture(e.pointerId);
+  paneResizer.classList.add("dragging");
+});
+
+paneResizer.addEventListener("pointermove", (e) => {
+  if (!paneResizer.hasPointerCapture(e.pointerId)) return;
+  const panesRect = paneResizer.parentElement.getBoundingClientRect();
+  const maxWidth = panesRect.width - paneResizer.offsetWidth - MIN_PANE_WIDTH;
+  const width = Math.min(maxWidth, Math.max(MIN_PANE_WIDTH, e.clientX - panesRect.left));
+  editorPane.style.flex = `0 0 ${width}px`;
+});
+
+paneResizer.addEventListener("pointerup", (e) => {
+  paneResizer.releasePointerCapture(e.pointerId);
+  paneResizer.classList.remove("dragging");
+});
+
+outputCloseBtn.addEventListener("click", () => {
+  savedEditorFlex = editorPane.style.flex;
+  outputPane.hidden = true;
+  paneResizer.hidden = true;
+  editorPane.style.flex = "1";
+  showFilesBtn.hidden = false;
+});
+
+showFilesBtn.addEventListener("click", () => {
+  outputPane.hidden = false;
+  paneResizer.hidden = false;
+  editorPane.style.flex = savedEditorFlex;
+  showFilesBtn.hidden = true;
+});
+
+
+// Window chrome — the draggable/resizable "guide" help window
+
+
+const guideIcon = document.getElementById("guide-icon");
+const guideWindow = document.getElementById("guide-window");
+const guideTitlebar = document.getElementById("guide-titlebar");
+const guideCloseBtn = document.getElementById("guide-close-btn");
+const guideResizer = document.getElementById("guide-resizer");
+
+guideIcon.addEventListener("dblclick", () => {
+  guideWindow.hidden = false;
+});
+
+guideCloseBtn.addEventListener("click", () => {
+  guideWindow.hidden = true;
+});
+
+let guideDragOffsetX = 0;
+let guideDragOffsetY = 0;
+
+guideTitlebar.addEventListener("pointerdown", (e) => {
+  if (e.target.closest("#guide-close-btn")) return;
+  guideTitlebar.setPointerCapture(e.pointerId);
+  const rect = guideWindow.getBoundingClientRect();
+  guideDragOffsetX = e.clientX - rect.left;
+  guideDragOffsetY = e.clientY - rect.top;
+});
+
+guideTitlebar.addEventListener("pointermove", (e) => {
+  if (!guideTitlebar.hasPointerCapture(e.pointerId)) return;
+  guideWindow.style.left = `${e.clientX - guideDragOffsetX}px`;
+  guideWindow.style.top = `${e.clientY - guideDragOffsetY}px`;
+});
+
+guideTitlebar.addEventListener("pointerup", (e) => {
+  if (guideTitlebar.hasPointerCapture(e.pointerId)) {
+    guideTitlebar.releasePointerCapture(e.pointerId);
+  }
+});
+
+const GUIDE_MIN_WIDTH = 280;
+const GUIDE_MIN_HEIGHT = 200;
+
+guideResizer.addEventListener("pointerdown", (e) => {
+  guideResizer.setPointerCapture(e.pointerId);
+});
+
+guideResizer.addEventListener("pointermove", (e) => {
+  if (!guideResizer.hasPointerCapture(e.pointerId)) return;
+  const rect = guideWindow.getBoundingClientRect();
+  const width = Math.max(GUIDE_MIN_WIDTH, e.clientX - rect.left);
+  const height = Math.max(GUIDE_MIN_HEIGHT, e.clientY - rect.top);
+  guideWindow.style.width = `${width}px`;
+  guideWindow.style.height = `${height}px`;
+});
+
+guideResizer.addEventListener("pointerup", (e) => {
+  if (guideResizer.hasPointerCapture(e.pointerId)) {
+    guideResizer.releasePointerCapture(e.pointerId);
+  }
+});
+
+
+// Taskbar clock
+
+
+const taskbarClock = document.getElementById("taskbar-clock");
+
 function updateClock() {
   taskbarClock.textContent = new Date().toLocaleTimeString([], {
     hour: "numeric",
@@ -418,6 +532,21 @@ function updateClock() {
 
 updateClock();
 setInterval(updateClock, 1000 * 30);
+
+
+// Build workflow — sends the spec to the API, renders the generated files,
+// and offers them as a zip download.
+
+
+const buildBtn = document.getElementById("build-btn");
+const outputCode = document.getElementById("output-code");
+const errorBanner = document.getElementById("error-banner");
+const tabs = document.getElementById("tabs");
+const buildModal = document.getElementById("build-modal");
+const modalStep = document.getElementById("modal-step");
+const statusText = document.getElementById("status-text");
+const progressFill = document.getElementById("progress-fill");
+const downloadZipBtn = document.getElementById("download-zip-btn");
 
 function selectTab(button, name, data) {
   for (const btn of tabs.children) {
@@ -528,56 +657,3 @@ function downloadBlob(blob, filename) {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
-
-guideIcon.addEventListener("dblclick", () => {
-  guideWindow.hidden = false;
-});
-
-guideCloseBtn.addEventListener("click", () => {
-  guideWindow.hidden = true;
-});
-
-let guideDragOffsetX = 0;
-let guideDragOffsetY = 0;
-
-guideTitlebar.addEventListener("pointerdown", (e) => {
-  if (e.target.closest("#guide-close-btn")) return;
-  guideTitlebar.setPointerCapture(e.pointerId);
-  const rect = guideWindow.getBoundingClientRect();
-  guideDragOffsetX = e.clientX - rect.left;
-  guideDragOffsetY = e.clientY - rect.top;
-});
-
-guideTitlebar.addEventListener("pointermove", (e) => {
-  if (!guideTitlebar.hasPointerCapture(e.pointerId)) return;
-  guideWindow.style.left = `${e.clientX - guideDragOffsetX}px`;
-  guideWindow.style.top = `${e.clientY - guideDragOffsetY}px`;
-});
-
-guideTitlebar.addEventListener("pointerup", (e) => {
-  if (guideTitlebar.hasPointerCapture(e.pointerId)) {
-    guideTitlebar.releasePointerCapture(e.pointerId);
-  }
-});
-
-const GUIDE_MIN_WIDTH = 280;
-const GUIDE_MIN_HEIGHT = 200;
-
-guideResizer.addEventListener("pointerdown", (e) => {
-  guideResizer.setPointerCapture(e.pointerId);
-});
-
-guideResizer.addEventListener("pointermove", (e) => {
-  if (!guideResizer.hasPointerCapture(e.pointerId)) return;
-  const rect = guideWindow.getBoundingClientRect();
-  const width = Math.max(GUIDE_MIN_WIDTH, e.clientX - rect.left);
-  const height = Math.max(GUIDE_MIN_HEIGHT, e.clientY - rect.top);
-  guideWindow.style.width = `${width}px`;
-  guideWindow.style.height = `${height}px`;
-});
-
-guideResizer.addEventListener("pointerup", (e) => {
-  if (guideResizer.hasPointerCapture(e.pointerId)) {
-    guideResizer.releasePointerCapture(e.pointerId);
-  }
-});
