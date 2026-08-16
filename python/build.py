@@ -54,22 +54,93 @@ def class_to_noun(resolved: str, nouns: dict) -> str | None:
     return None
 
 
-#prev. used repr but since that is only in python and we build the frontend in ts, we need to create a new function
 def to_python_literal(value) -> str:
-
-    if isinstance(value, bool): #comes first since bool is a subclass of int
-        return "True" if value else "False"
-    if isinstance(value, (int, float)):
-        return str(value)
-    if isinstance(value, str):
-        return repr(value)
-    if value is None:
-        return "None"
-    if isinstance(value, list):
-        return "[" + ", ".join(to_python_literal(v) for v in value) + "]"
     if isinstance(value, (date, datetime)):
         return repr(value.isoformat())
-    raise SpecError(f"Can't turn {value!r} into a literal")
+    if isinstance(value, list):
+        return "[" + ", ".join(to_python_literal(v) for v in value) + "]"
+    if isinstance(value, dict):
+        raise SpecError(f"Can't turn {value!r} into a literal")
+    return repr(value)
+
+
+# Finds the sign a colon got left out of a "name: type"
+# - a multi-word string mapped to None (a lone malformed
+#   entry with a valid sibling before it collapses this way)
+# - the whole block collapsed into one multi-word plain string where YAML just reads it as
+#   one scalar value instead of raising).
+def _missing_colon_in(fields) -> str | None:
+    if isinstance(fields, dict):
+        for k, v in fields.items():
+            if isinstance(k, str) and v is None and len(k.split()) > 1:
+                return k
+        return None
+    if isinstance(fields, str) and len(fields.split()) > 1:
+        return fields
+    return None
+
+
+def _raise_missing_colon(bad_key: str, context: str) -> None:
+    first, _, rest = bad_key.partition(" ")
+    rest = rest.strip()
+    suggestion = f"{first}: {rest}" if rest else f"{first}: ..."
+    raise SpecError(
+        f"It looks like a colon is missing in {context}, near `{bad_key}`.\n"
+        f"YAML parsed `{bad_key}` as a single field name with no type, "
+        f"which usually means a colon got left out.\n"
+        f"Did you mean `{suggestion}`?"
+    )
+
+
+# Checks noun field declarations and function input: blocks -- both are
+# always written block-style in this app's convention, so a missing colon
+# there always shows up either as a multi-word key mapped to None, or (when
+# there's nothing else in the block to signal it's a mapping) the whole
+# thing collapsing into one multi-word scalar string.
+def check_for_missing_colons(spec: dict) -> None:
+    nouns = spec.get("nouns") or {}
+    for noun_name, fields in nouns.items():
+        bad_key = _missing_colon_in(fields)
+        if bad_key:
+            _raise_missing_colon(bad_key, f"noun '{noun_name}'")
+
+    for fn in spec.get("functions") or []:
+        if not isinstance(fn, dict):
+            continue
+        bad_key = _missing_colon_in(fn.get("input"))
+        if bad_key:
+            _raise_missing_colon(bad_key, f"function '{fn.get('name', '?')}'s input")
+
+
+# Checks a given: example's noun-instance values -- e.g. profile_1: {name
+# Sam, age: 30} parses to a dict with fewer keys than the noun declares,
+# one of them the merged 'name Sam'. Runs after the given/input name-match
+# guard in gen_tests, which already confirmed the top-level param names line up.
+def _check_given_instance_shapes(fn: dict, given: dict, nouns: dict, example_index: int) -> None:
+    for param_name, type_raw in fn["input"].items():
+        resolved = semantic_types(type_raw, nouns)
+        noun_key = class_to_noun(resolved, nouns)
+        if not noun_key:
+            continue
+        value = given[param_name]
+        if not isinstance(value, dict):
+            continue
+        expected_fields = set(nouns[noun_key])
+        if set(value) == expected_fields:
+            continue
+        merged_key = next(
+            (k for k in value
+             if isinstance(k, str) and value[k] is None and len(k.split()) > 1),
+            None,
+        )
+        if merged_key is None:
+            continue
+        first, _, rest = merged_key.partition(" ")
+        raise SpecError(
+            f"In '{fn['name']}', example #{example_index}'s '{param_name}' "
+            f"looks like it's missing a colon near `{merged_key}`.\n"
+            f"Did you mean `{first}: {rest.strip()}`?"
+        )
 
 
 def build_object(resolved: str, raw, nouns: dict):
@@ -132,6 +203,27 @@ def gen_tests(functions: list, nouns: dict) -> str:
             if "given" not in ex or "returns" not in ex:
                 continue
             given = ex["given"]
+#new guard for mismatch between # of input variables and given variables in examples
+            input_names = set(fn["input"])
+            given_names = set(given) if isinstance(given, dict) else None
+            if given_names != input_names:
+                if given_names is None:
+                    raise SpecError(
+                        f"In '{fn['name']}', example #{i}'s 'given' should map "
+                        f"each input name to its value, got {given!r}."
+                    )
+                detail = []
+                missing = sorted(input_names - given_names)
+                extra = sorted(given_names - input_names)
+                if missing:
+                    detail.append(f"missing {', '.join(missing)}")
+                if extra:
+                    detail.append(f"has unknown field(s) {', '.join(extra)}")
+                raise SpecError(
+                    f"In '{fn['name']}', example #{i}'s 'given' doesn't match "
+                    f"its inputs: {'; '.join(detail)}."
+                )
+            _check_given_instance_shapes(fn, given, nouns, i)
             call_args = ", ".join(
                 f"{n}={build_object(semantic_types(fn['input'][n], nouns), v, nouns)}"
                 for n, v in given.items()
@@ -151,9 +243,9 @@ def gen_tests(functions: list, nouns: dict) -> str:
 # I've cut generating the main pipeline for now
 def gen_claude_md(spec: dict, functions: list, main_steps: list) -> str:
     ctx_blocks = spec.get("context_blocks", {})
-    overview = spec.get("overview", "").strip()
+    overview = spec["overview"].strip()
 
-    out = [f"# {spec.get('project', 'Project')}", ""]
+    out = [f"# {spec['project']}", ""]
     out.append("## Your job")
     out.append("")
     out.append("Every function in `functions.py` currently ends in "
@@ -166,7 +258,7 @@ def gen_claude_md(spec: dict, functions: list, main_steps: list) -> str:
     out.append("")
     out.append("## Project overview")
     out.append("")
-    out.append(overview or "_(none provided)_")
+    out.append(overview)
     out.append("")
     out.append("## Functions to implement")
     out.append("")
@@ -202,7 +294,7 @@ class SpecError(Exception):
     pass
 
 
-REQUIRED_FUNCTION_FIELDS = ("name", "does", "input", "output")
+REQUIRED_FUNCTION_FIELDS = ("does", "input", "output")
 
 
 # name/does/input/output define the contract (signature + docstring) so they're
@@ -212,11 +304,12 @@ def validate_functions(functions: list) -> None:
     for i, fn in enumerate(functions, start=1):
         if not isinstance(fn, dict):
             raise SpecError(f"Function #{i} should be a mapping, got {fn!r}.")
+        if not fn.get("name"):
+            raise SpecError(f"Function #{i} is missing a name.")
         missing = [f for f in REQUIRED_FUNCTION_FIELDS if f not in fn]
         if missing:
-            label = fn.get("name", f"#{i}")
             raise SpecError(
-                f"Function '{label}' is missing required field(s): "
+                f"Function '{fn['name']}' is missing required field(s): "
                 f"{', '.join(missing)}."
             )
 
@@ -228,6 +321,13 @@ def generate(spec: dict) -> dict[str, str]:
             f"Your spec should be a YAML mapping (project/nouns/functions/...), "
             f"but it parsed as {type(spec).__name__}: {spec!r}"
         )
+
+    if not spec.get("project"):
+        raise SpecError("Your spec is missing a 'project' name.")
+    if not spec.get("overview"):
+        raise SpecError("Your spec is missing an 'overview'.")
+
+    check_for_missing_colons(spec)
 
     nouns = spec.get("nouns") or {}
     functions = spec.get("functions") or []
@@ -250,17 +350,6 @@ def generate(spec: dict) -> dict[str, str]:
         "functions.py":      gen_stubs(functions, nouns),
         "test_functions.py": gen_tests(functions, nouns),
         "CLAUDE.md":         gen_claude_md(spec, functions, main_steps),
-    }
-
-#Spec in, {filename:contents} out, like the dict for card rankings
-def build_files(spec: dict) -> dict:
-    nouns = spec.get("nouns") or {}
-    functions = spec.get("functions") or []
-    return {
-        "spec_models.py": gen_models(nouns),
-        "functions.py": gen_stubs(functions, nouns),
-        "test_functions.py": gen_tests(functions, nouns),
-        "CLAUDE.md": gen_claude_md(spec, functions, spec.get("main") or []),
     }
 
 #Making it work for internal testing, disk only

@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import yaml
 
 from build import generate, SpecError
+from yaml_errors import friendly_yaml_error
 
 app = FastAPI()
 
@@ -34,7 +35,7 @@ def build_endpoint(request: BuildRequest):
     try:
         spec = yaml.safe_load(request.spec)
     except yaml.YAMLError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid YAML: {e}")
+        raise HTTPException(status_code=400, detail=friendly_yaml_error(e, request.spec))
 
     try:
         files = generate(spec)
