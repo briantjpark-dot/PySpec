@@ -127,6 +127,30 @@ Here is how examples can be used in our previous function:
         returns: 2
 ```
 
+### Two Styles of Notation:
+
+Like the example above, you can write out multiple examples for a single input. This will likely be the case for managing lists. Here is that notation here:
+
+```yaml
+examples:
+      - given:
+          tasks:
+            - {title: Email, priority: 2, done: false}
+            - {title: Report, priority: 1, done: false}
+            - {title: Lunch, priority: 3, done: true}
+        returns: 2
+```
+
+But let's suppose you have multiple input variables or only want to write out a single example. You may do so like this:
+
+```yaml
+examples:
+      - given:
+            profile_a: {name: Sam, age: 30, verified: true}
+            profile_b: {name: Alex, age: 28, verified: true}
+        returns: true
+```
+
 A few things to notice:
 
 - Under `given`, you name each input and provide a value shaped like its type.
