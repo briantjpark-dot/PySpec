@@ -479,6 +479,20 @@ body {
   box-shadow: inset 1px 1px 0 #fff;
 }
 
+.tabs button .tab-close {
+  margin-left: 6px;
+  color: #808080;
+}
+
+.tabs button .tab-close:hover {
+  color: #000;
+}
+
+.tabs .tab-add-btn {
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
 .output-code {
   flex: 1;
   min-height: 0;

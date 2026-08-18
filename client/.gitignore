@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+spec.yaml
+demodatingspec.yaml
+collab-test.html

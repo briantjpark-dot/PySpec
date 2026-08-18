@@ -21,3 +21,6 @@ docs/
 
 # Superpowers subagent-driven-development scratch workspace
 .superpowers/
+
+# Claude Code project-local settings
+.claude/
