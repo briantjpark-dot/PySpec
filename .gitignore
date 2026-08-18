@@ -24,3 +24,7 @@ docs/
 
 # Claude Code project-local settings
 .claude/
+
+
+demodatingspec.yaml
+spec.yaml
