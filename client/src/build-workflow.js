@@ -10,7 +10,6 @@ const outputCode = document.getElementById("output-code");
 const tabs = document.getElementById("tabs");
 const buildModal = document.getElementById("build-modal");
 const modalStep = document.getElementById("modal-step");
-const statusText = document.getElementById("status-text");
 const progressFill = document.getElementById("progress-fill");
 const downloadZipBtn = document.getElementById("download-zip-btn");
 
@@ -70,7 +69,6 @@ buildBtn.addEventListener("click", async () => {
   clearError();
   outputCode.textContent = "";
   tabs.textContent = "";
-  statusText.textContent = "Building…";
   buildModal.hidden = false;
   downloadZipBtn.disabled = true;
   targetTab.buildResult = { status: "idle" };
@@ -104,7 +102,6 @@ buildBtn.addEventListener("click", async () => {
     const errorMessage = data.detail || "Build failed.";
     targetTab.buildResult = { status: "error", errorMessage };
     showError(errorMessage);
-    statusText.textContent = "Build failed.";
     return;
   }
 
@@ -124,7 +121,6 @@ buildBtn.addEventListener("click", async () => {
     selectOutputTab(firstTab, fileNames[0]);
   }
 
-  statusText.textContent = "Build succeeded.";
   downloadZipBtn.disabled = false;
 });
 

@@ -1,6 +1,6 @@
 // Editor toolbar actions — undo/redo and the two "replace the doc" buttons.
 
-import { getSpecTabs, getActiveSpecTabId, editorView } from "./spec-tabs-state.js";
+import { getSpecTabs, getActiveSpecTabId, editorView, onTabsChanged } from "./spec-tabs-state.js";
 import { starterSpecTemplate, blankSpecTemplate } from "./spec-templates.js";
 import { closeMenus } from "./window-chrome-menu.js";
 import { downloadBlob } from "./build-workflow.js";
@@ -14,14 +14,29 @@ const uploadSpecBtn = document.getElementById("upload-spec-btn");
 const uploadSpecInput = document.getElementById("upload-spec-input");
 const saveSpecBtn = document.getElementById("save-spec-btn");
 const downloadSpecBtn = document.getElementById("download-spec-btn");
+const titlebarFilename = document.getElementById("titlebar-filename");
+
+// Reflects the active tab's uploaded filename in the titlebar, or the
+// "spec.yaml" default if it was never loaded from a file. Runs on every
+// tab-state change (switch/add/close) via onTabsChanged, and is also called
+// directly right after an upload sets fileName on the active tab.
+function renderTitlebarFilename() {
+  const activeTab = getSpecTabs().find((t) => t.id === getActiveSpecTabId());
+  titlebarFilename.textContent = `PySpec 95 — ${activeTab?.fileName ?? "spec.yaml"}`;
+}
+onTabsChanged(renderTitlebarFilename);
 
 // File System Access API (showOpenFilePicker/showSaveFilePicker) is Chromium-only.
 // Where it's missing, "Upload spec" falls back to the plain <input type="file">
 // flow below and no "Save" option is offered since there's no handle to write back to.
 const supportsFileSystemAccess = "showOpenFilePicker" in window && "showSaveFilePicker" in window;
 
+// "application/octet-stream" (not a YAML-specific MIME type) is deliberate: YAML has no
+// universally-registered MIME type, and the native file picker greys out files it can't
+// map to an OS-recognized type for the given extensions. octet-stream is always recognized,
+// so the .yaml/.yml extension filter actually takes effect.
 const YAML_FILE_PICKER_TYPES = [
-  { description: "YAML spec", accept: { "text/yaml": [".yaml", ".yml"] } },
+  { description: "YAML spec", accept: { "application/octet-stream": [".yaml", ".yml"] } },
 ];
 
 // y-codemirror.next doesn't publicly export undo/redo commandsso these call the active tab's own
@@ -71,6 +86,11 @@ uploadSpecInput.addEventListener("change", async () => {
     changes: { from: 0, to: editorView.state.doc.length, insert: text },
   });
   uploadSpecInput.value = "";
+
+  const activeTab = getSpecTabs().find((t) => t.id === getActiveSpecTabId());
+  activeTab.fileName = file.name;
+  renderTitlebarFilename();
+
   closeMenus();
   editorView.focus();
 });
@@ -109,6 +129,8 @@ async function pickAndLoadSpecFile() {
 
   const activeTab = getSpecTabs().find((t) => t.id === getActiveSpecTabId());
   activeTab.fileHandle = handle;
+  activeTab.fileName = handle.name;
+  renderTitlebarFilename();
 }
 
 async function ensureWritePermission(handle) {

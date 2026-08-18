@@ -106,6 +106,7 @@ function reconcileSpecTabs() {
       undoManager: new Y.UndoManager(content),
       buildResult: { status: "idle" },
       fileHandle: null,
+      fileName: null,
     };
   });
 
