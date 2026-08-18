@@ -1,0 +1,1 @@
+web: HOST=0.0.0.0 node node_modules/@y/websocket-server/src/server.js

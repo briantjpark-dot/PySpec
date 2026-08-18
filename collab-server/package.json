@@ -1,0 +1,9 @@
+{
+  "name": "pyspec-collab-server",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@y/websocket-server": "0.1.1",
+    "ws": "^6.2.1"
+  }
+}

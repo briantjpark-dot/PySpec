@@ -17,7 +17,7 @@ if (!roomName) {
 }
 
 export const ydoc = new Y.Doc()
-export const provider = new WebsocketProvider('ws://localhost:1234', roomName, ydoc)
+export const provider = new WebsocketProvider(import.meta.env.VITE_COLLAB_WS_URL, roomName, ydoc)
 export const yarray = ydoc.getArray('tabs')
 let activeTabId = null
 
